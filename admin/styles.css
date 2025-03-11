@@ -1,0 +1,192 @@
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    
+}
+
+body {
+    font-family: "Josefin Sans", sans-serif;
+    font-optical-sizing: auto;
+    font-weight: weight;
+    font-style: normal;
+    background-color: #f4f4f4;
+}
+
+.container {
+    display: flex;
+}
+
+.sidebar {
+    width: 250px;
+    background-color: #2c3e50;
+    color: white;
+    padding: 20px;
+    position: fixed; /* Keep the sidebar fixed */
+    height: 100%; /* Full height */
+    display: flex;
+    flex-direction: column; /* Arrange items in a column */
+}
+
+.sidebar h2 {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.menu {
+    flex: 1; /* Allow the menu to grow and take available space */
+    list-style-type: none;
+}
+
+.menu li {
+    margin: 15px 0;
+}
+
+.menu li span {
+    font-weight: bold;
+    display: block;
+    margin-bottom: 5px;
+    cursor: pointer; /* Change cursor to pointer for better UX */
+    padding: 10px; /* Add padding for better click area */
+    transition: background 0.3s; /* Smooth background transition */
+}
+
+.menu li span:hover {
+    background-color: #34495e; /* Hover effect for Patient and Medicine */
+}
+
+.menu li .submenu {
+    display: none; /* Hide submenus by default */
+    padding-left: 15px; /* Indent submenu items */
+}
+
+.menu li a {
+    color: white;
+    text-decoration: none;
+    padding: 10px;
+    display: block;
+    border-radius: 5px;
+    transition: background 0.3s;
+}
+
+.menu li a:hover {
+    background-color: #34495e; /* Same hover effect as other links */
+}
+
+.menu li .dashboard {
+    color: white;
+    text-decoration: none;
+    padding: 10px;
+    display: block;
+    border-radius: 5px;
+    transition: background 0.3s;
+}
+
+.menu li .dashboard:hover {
+    background-color: #34495e; /* Same hover effect as other links */
+}
+
+.logout {
+    color: white; /* Text color */
+    text-decoration: none; /* Remove underline */
+    padding: 10px; /* Same padding as other links */
+    border-radius: 5px; /* Same border radius */
+    margin-top: 15px; /* Add margin for spacing */
+}
+
+.logout:hover {
+    background-color: #34495e; /* Same hover effect as other links */
+}
+
+.header {
+    background-color: #2980b9; /* Header background color */
+    color: white; /* Text color */
+    padding: 15px; /* Padding for the header */
+    display: flex; /* Use flexbox for layout */
+    justify-content: flex-end; /* Align items to the right */
+    align-items: center; /* Center items vertically */
+    border-bottom: 2px solid #1c598a; /* Add a bottom border for separation */
+    position: fixed; /* Fix the header at the top */
+    top: 0; /* Align to the top */
+    left: 250px; /* Align to the right of the sidebar */
+    right: 0; /* Align to the right */
+    z-index: 1000; /* Ensure it stays above other content */
+}
+
+.admin-info {
+    font-size: 16px; /* Font size for admin info */
+    font-weight: bold; /* Make it bold */
+}
+
+.main-content {
+    flex: 1;
+    padding: 20px;
+    margin-left: 250px; /* Add margin to prevent overlap with fixed sidebar */
+    margin-top: 70px; /* Add margin to prevent overlap with fixed header */
+    background-color: #ecf0f1; /* Main content background color */
+}
+
+/* Styles for the patient form */
+form {
+    background-color: white; /* Form background color */
+    padding: 20px; /* Padding inside the form */
+    border-radius: 5px; /* Rounded corners */
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
+    margin-bottom: 20px; /* Space below the form */
+}
+
+h2, h3 {
+    color: #2980b9; /* Heading color */
+    margin-bottom: 15px; /* Space below headings */
+}
+
+label {
+    display: block; /* Make labels block elements */
+    margin-bottom: 5px; /* Space below labels */
+    font-weight: bold; /* Bold labels */
+}
+
+input[type="text"],
+input[type="date"],
+input[type="tel"],
+input[type="email"],
+input[type="number"],
+textarea,
+select {
+    width: 100%; /* Full width */
+    padding: 10px; /* Padding inside input fields */
+    margin-bottom: 15px; /* Space below input fields */
+    border: 1px solid #ccc; /* Border color */
+    border-radius : 4px; /* Rounded corners for input fields */
+    font-size: 14px; /* Font size for input fields */
+}
+
+input[type="submit"],
+button {
+    background-color: #2980b9; /* Button background color */
+    color: white; /* Button text color */
+    border: none; /* Remove border */
+    padding: 10px 15px; /* Padding for button */
+    border-radius: 5px; /* Rounded corners for button */
+    cursor: pointer; /* Pointer cursor on hover */
+    transition: background 0.3s; /* Smooth background transition */
+}
+
+input[type="submit"]:hover,
+button:hover {
+    background-color: #1c598a; /* Darker shade on hover */
+}
+
+.login-container {
+    max-width: 400px; /* Set a max width for the login form */
+    margin: 100px auto; /* Center the form vertically and horizontally */
+    padding: 20px; /* Padding inside the form */
+    background-color: white; /* Background color for the form */
+    border-radius: 5px; /* Rounded corners */
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
+}
+
+.error {
+    color: red; /* Error message color */
+    margin-bottom: 15px; /* Space below the error message */
+}
