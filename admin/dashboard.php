@@ -121,8 +121,6 @@ $conn->close();
                     <ul class="submenu">
                         <li><a href="patients.php">Add Patient</a></li>
                         <li><a href="view_records.php">View Records</a></li>
-                        <li><a href="#search-filter-patients">Search & Filter Patients</a></li>
-                        <li><a href="#edit-patient-info">Edit Patient Information</a></li>
                     </ul>
                 </li>
                 <li>

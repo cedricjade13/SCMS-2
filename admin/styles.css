@@ -190,3 +190,38 @@ button:hover {
     color: red; /* Error message color */
     margin-bottom: 15px; /* Space below the error message */
 }
+
+.header-container {
+    display: flex;
+    justify-content: space-between; /* Space between the heading and search bar */
+    align-items: center; /* Center items vertically */
+    margin-bottom: 20px; /* Space below the header */
+}
+
+.search-container {
+    display: flex;
+}
+
+.search-container form {
+    display: flex;
+}
+
+.search-container input[type="text"] {
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 5px 0 0 5px; /* Rounded corners on the left */
+}
+
+.search-container button {
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-left: none; /* Remove left border to connect with input */
+    border-radius: 0 5px 5px 0; /* Rounded corners on the right */
+    background-color: #007bff; /* Button color */
+    color: white; /* Text color */
+    cursor: pointer; /* Pointer cursor on hover */
+}
+
+.search-container button:hover {
+    background-color: #0056b3; /* Darker button color on hover */
+}

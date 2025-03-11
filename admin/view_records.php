@@ -69,6 +69,41 @@ $conn->close();
         .patient-info label {
             font-weight: bold;
         }
+
+        .header-container {
+            display: flex;
+            justify-content: space-between; /* Space between the heading and search bar */
+            align-items: center; /* Center items vertically */
+            margin-bottom: 20px; /* Space below the header */
+        }
+
+        .search-container {
+            display: flex;
+        }
+
+        .search-container form {
+            display: flex;
+        }
+
+        .search-container input[type="text"] {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px 0 0 5px; /* Rounded corners on the left */
+        }
+
+        .search-container button {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-left: none; /* Remove left border to connect with input */
+            border-radius: 0 5px 5px 0; /* Rounded corners on the right */
+            background-color: #007bff; /* Button color */
+            color: white; /* Text color */
+            cursor: pointer; /* Pointer cursor on hover */
+        }
+
+        .search-container button:hover {
+            background-color: #0056b3; /* Darker button color on hover */
+        }
         
     </style>
 </head>
@@ -85,8 +120,6 @@ $conn->close();
                     <ul class="submenu">
                         <li><a href="patients.php">Add Patient</a></li>
                         <li><a href="view_records.php">View Records</a></li>
-                        <li><a href="#search-filter-patients">Search & Filter Patients</a></li>
-                        <li><a href="#edit-patient-info">Edit Patient Information</a></li>
                     </ul>
                 </li>
                 <li>
@@ -107,7 +140,16 @@ $conn->close();
         </header>
         
         <main class="main-content">
-            <h2>Patient Records</h2>
+            <div class="header-container">
+                <h2>Patient Records</h2>
+                <div class="search-container">
+                    <form action="search.php" method="GET">
+                        <input type="text" name="query" placeholder="Search..." required>
+                        <button type="submit"><i class="fa-solid fa-search"></i></button>
+                    </form>
+                </div>
+            </div>
+
             <div class="patient-container">
                 <?php foreach ($patients as $patient): ?>
                     <div class="patient-record">
@@ -116,7 +158,7 @@ $conn->close();
                             <label>Full Name</label> <?php echo htmlspecialchars($patient['full_name']); ?>
                         </div><br>
                         <div class="patient-info">
-                            <label>DOB</label> <?php echo htmlspecialchars($patient['dob']); ?>
+                            <label>Date Of Birth</label> <?php echo htmlspecialchars($patient['dob']); ?>
                         </div><br>
                         <div class="patient-info">
                             <label>Gender</label> <?php echo htmlspecialchars($patient['gender']); ?>
