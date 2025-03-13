@@ -109,7 +109,6 @@ $conn->close();
                         <li><a href="#expiry-date-tracking">Expiry Date Tracking</a></li>
                     </ul>
                 </li>
-                <li><a href="create_account.php"><i class="fa-solid fa-user"></i> Manage Account</a></li>
                 <li><a href="#settings"><i class="fa-solid fa-gears"></i> Settings</a></li>
             </ul>
             <a href="login.php" class="logout"><i class="fa-solid fa-right-from-bracket"></i> Logout</a>
