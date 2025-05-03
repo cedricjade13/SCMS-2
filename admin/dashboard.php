@@ -127,8 +127,8 @@ $conn->close();
                     <span class="toggle"><i class="fa-solid fa-capsules"></i> Medicine</span>
                     <ul class="submenu">
                         <li><a href="medicines.php">Add Medicines</a></li>
-                        <li><a href="#search-filter-medicines">Search & Filter Medicines</a></li>
-                        <li><a href="#expiry-date-tracking">Expiry Date Tracking</a></li>
+                        <li><a href="store_medicine.php">Search & Filter Medicines</a></li>
+                        <li><a href="view_dispensed_medicines.php">View Dispensed Medicines</a></li>
                     </ul>
                 </li>
                 <li><a href="create_account.php"><i class="fa-solid fa-user"></i> Manage Account</a></li>

@@ -1,4 +1,4 @@
-<?php 
+<?php
 session_start(); // Start the session
 
 // Include the database configuration file
@@ -12,17 +12,15 @@ if (isset($_SESSION['username'])) {
     exit();
 }
 
-// Initialize an array to hold patient data
-$patients = [];
-
-// Fetch patient data from the database
-$sql = "SELECT * FROM patients"; // Adjust the table name if necessary
+// Fetch medicines from the database
+$medicines = [];
+$sql = "SELECT * FROM medicines"; // Adjust the table name if necessary
 $result = $conn->query($sql);
 
 if ($result->num_rows > 0) {
-    // Fetch all patient records
+    // Fetch all medicine records
     while ($row = $result->fetch_assoc()) {
-        $patients[] = $row; // Add each patient record to the array
+        $medicines[] = $row; // Add each medicine record to the array
     }
 }
 
@@ -35,11 +33,11 @@ $conn->close();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>View Patient Records</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Josefin+Sans:wght@400;600&display=swap" rel="stylesheet">
+    <title>Store Medicines</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" crossorigin="anonymous" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Josefin+Sans:wght@400;600&display=swap" rel="stylesheet" />
     
     <style>
         * {
@@ -50,6 +48,22 @@ $conn->close();
             font-style: normal;
             margin: 0;
             padding: 0;
+        }
+
+        input[type="submit"],
+        button {
+            background-color: #2980b9; /* Button background color */
+            color: white; /* Button text color */
+            border: none; /* Remove border */
+            padding: 10px 15px; /* Padding for button */
+            border-radius: 5px; /* Rounded corners for button */
+            cursor: pointer; /* Pointer cursor on hover */
+            transition: background 0.3s; /* Smooth background transition */
+        }
+
+        input[type="submit"]:hover,
+        button:hover {
+            background-color: #1c598a; /* Darker shade on hover */
         }
 
         .container {
@@ -131,7 +145,7 @@ $conn->close();
             display: flex; /* Use flexbox for layout */
             justify-content: flex-end; /* Align items to the right */
             align-items: center; /* Center items vertically */
-            border-bottom : 2px solid #1c598a; /* Add a bottom border for separation */
+            border-bottom: 2px solid #1c598a; /* Add a bottom border for separation */
             position: fixed; /* Fix the header at the top */
             top: 0; /* Align to the top */
             left: 250px; /* Align to the right of the sidebar */
@@ -188,7 +202,7 @@ $conn->close();
             gap: 10px; /* Space between action buttons */
         }
 
-        .edit, .delete {
+        .edit, .delete, .get-medicine {
             text-decoration: none;
             padding: 5px 10px;
             border-radius: 5px;
@@ -210,6 +224,14 @@ $conn->close();
 
         .delete:hover {
             background-color: #c82333; /* Darker red on hover */
+        }
+
+        .get-medicine {
+            background-color: #007bff; /* Blue for get medicine */
+        }
+
+        .get-medicine:hover {
+            background-color: #0056b3; /* Darker blue on hover */
         }
     </style>
 </head>
@@ -243,41 +265,34 @@ $conn->close();
         </aside>
         
         <header class="header">
-            <div class="admin-info">ADMINISTRATOR, Hi <?php echo htmlspecialchars($username); ?></div> <!-- Admin info on the right -->
+            <div class="admin-info">ADMINISTRATOR, Hi <?php echo htmlspecialchars($username); ?></div>
         </header>
         
         <main class="main-content">
-            <div class="header-container">
-                <h2>Patient Records</h2>
-                <div class="search-container">
-                    <input type="text" id="searchInput" placeholder="Search..." onkeyup="filterTable()">
-                </div>
-            </div>
-
-            <table id="patientTable">
+            <h2>Store Medicines</h2>
+            <table id="medicineTable">
                 <thead>
                     <tr>
-                        <th>Full Name</th>
-                        <th>Gender</th>
-                        <th>Contact Number</th>
-                        <th>Email</th>
-                        <th>Address</th>
-                        <th>Assigned Doctor</th>
+                        <th>Medicine</th>
+                        <th>Dosage</th>
+                        <th>Quantity</th>
+                        <th>Expiry Date</th>
+                        <th>Description</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody>
-                    <?php foreach ($patients as $patient): ?>
+                    <?php foreach ($medicines as $medicine): ?>
                         <tr>
-                            <td><?php echo htmlspecialchars($patient['full_name']); ?></td>
-                            <td><?php echo htmlspecialchars($patient['gender']); ?></td>
-                            <td><?php echo htmlspecialchars($patient['contact_number']); ?></td>
-                            <td><?php echo htmlspecialchars($patient['email']); ?></td>
-                            <td><?php echo htmlspecialchars($patient['address']); ?></td>
-                            <td><?php echo htmlspecialchars($patient['assigned_doctor']); ?></td>
+                            <td><?php echo htmlspecialchars($medicine['name']); ?></td>
+                            <td><?php echo htmlspecialchars($medicine['dosage']); ?></td>
+                            <td><?php echo htmlspecialchars($medicine['quantity']); ?></td>
+                            <td><?php echo htmlspecialchars($medicine['expiry_date']); ?></td>
+                            <td><?php echo htmlspecialchars($medicine['description']); ?></td>
                             <td class="actions">
-                                <a href="update_records.php?id=<?php echo $patient['id']; ?>" class="edit"><i class="fa-solid fa-edit"></i> Edit</a>
-                                <a href="delete_patient.php?id=<?php echo $patient['id']; ?>" class="delete" onclick="return confirm('Are you sure you want to delete this record?');"><i class="fa-solid fa-trash"></i> Delete</a>
+                                <a href="update_medicine.php?id=<?php echo $medicine['id']; ?>" class="edit"><i class="fa-solid fa-edit"></i> Edit</a>
+                                <a href="delete_medicine.php?id=<?php echo $medicine['id']; ?>" class="delete" onclick="return confirm('Are you sure you want to delete this medicine?');"><i class="fa-solid fa-trash"></i> Delete</a>
+                                <a href="get_medicine.php?id=<?php echo $medicine['id']; ?>" class="get-medicine"><i class="fa-solid fa-pills"></i> Get Medicine</a>
                             </td>
                         </tr>
                     <?php endforeach; ?>
@@ -287,21 +302,6 @@ $conn->close();
     </div>
 
     <script>
-        function filterTable() {
-            const input = document.getElementById('searchInput');
-            const filter = input.value.toLowerCase();
-            const table = document.getElementById('patientTable');
-            const tr = table.getElementsByTagName('tr');
-
-            for (let i = 1; i < tr.length; i++) {
-                const td = tr[i].getElementsByTagName('td')[0]; // Only check the Full Name column
-                if (td) {
-                    const txtValue = td.textContent || td.innerText;
-                    tr[i].style.display = txtValue.toLowerCase().indexOf(filter) > -1 ? "" : "none"; // Show or hide the row
-                }
-            }
-        }
-
         // JavaScript to toggle submenu visibility
         const toggles = document.querySelectorAll('.toggle');
 

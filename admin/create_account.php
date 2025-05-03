@@ -6,6 +6,14 @@ $success = ""; // Initialize success message
 // Include the database configuration file
 include('../database/config.php'); // Adjust the path as necessary
 
+
+if (isset($_SESSION['username'])) {
+    $username = $_SESSION['username']; // Get the username from the session
+} else {
+    // Redirect to login page if not logged in
+    header("Location: login.php");
+    exit();
+}
 // Registration logic
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $username = htmlspecialchars($_POST['username']);

@@ -1,7 +1,6 @@
 <?php
 session_start(); // Start the session
 
-
 // Include the database configuration file
 include('../database/config.php'); // Make sure this path is correct
 
@@ -13,8 +12,33 @@ if (isset($_SESSION['username'])) {
     exit();
 }
 
-// Check if the form has been submitted
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
+// Initialize variables
+$patient = null;
+
+// Check if the ID is set in the URL
+if (isset($_GET['id'])) {
+    $id = $_GET['id'];
+
+    // Fetch patient data from the database
+    $sql = "SELECT * FROM patients WHERE id = ?";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("i", $id);
+    $stmt->execute();
+    $result = $stmt->get_result();
+
+    if ($result->num_rows > 0) {
+        $patient = $result->fetch_assoc(); // Fetch the patient record
+    } else {
+        echo "No patient found.";
+        exit();
+    }
+} else {
+    echo "No ID provided.";
+    exit();
+}
+
+// Handle form submission
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Collect patient data from the form
     $patientData = [
         'full_name' => htmlspecialchars($_POST['full_name']),
@@ -36,20 +60,43 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         'emergency_contact_number' => htmlspecialchars($_POST['emergency_contact_number']),
     ];
 
-    // Insert patient data into the database
-    $stmt = $conn->prepare("INSERT INTO patients (full_name, dob, gender, contact_number, email, address, blood_type, allergies, conditions, surgeries, medications, family_history, assigned_doctor, reason_for_visit, emergency_contact_name, relationship, emergency_contact_number) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-    $stmt->bind_param("sssssssssssssssss", $patientData['full_name'], $patientData['dob'], $patientData['gender'], $patientData['contact_number'], $patientData['email'], $patientData['address'], $patientData['blood_type'], $patientData['allergies'], $patientData['conditions'], $patientData['surgeries'], $patientData['medications'], $patientData['family_history'], $patientData['assigned_doctor'], $patientData['reason_for_visit'], $patientData['emergency_contact_name'], $patientData['relationship'], $patientData['emergency_contact_number']);
+    // Update the patient record in the database
+    // Update the patient record in the database
+$update_sql = "UPDATE patients SET full_name=?, dob=?, gender=?, contact_number=?, email=?, address=?, blood_type=?, allergies=?, conditions=?, surgeries=?, medications=?, family_history=?, assigned_doctor=?, reason_for_visit=?, emergency_contact_name=?, relationship=?, emergency_contact_number=? WHERE id=?";
+$update_stmt = $conn->prepare($update_sql);
 
-    if ($stmt->execute()) {
-        // Redirect to view records after successful insertion
+// Ensure the number of parameters matches the number of columns
+$update_stmt->bind_param("sssssssssssssssssi", 
+        $patientData['full_name'], 
+        $patientData['dob'], 
+        $patientData['gender'], 
+        $patientData['contact_number'], 
+        $patientData['email'], 
+        $patientData['address'], 
+        $patientData['blood_type'], 
+        $patientData['allergies'], 
+        $patientData['conditions'], 
+        $patientData['surgeries'], 
+        $patientData['medications'], 
+        $patientData['family_history'], 
+        $patientData['assigned_doctor'], 
+        $patientData['reason_for_visit'], 
+        $patientData['emergency_contact_name'], 
+        $patientData['relationship'], 
+        $patientData['emergency_contact_number'], 
+        $id // This is the ID of the patient being updated
+    );
+
+    if ($update_stmt->execute()) {
+        // Redirect to view records after successful update
         header("Location: view_records.php");
         exit();
     } else {
-        echo "Error: " . $stmt->error;
+        echo "Error: " . $update_stmt->error;
     }
 
     // Close the statement
-    $stmt->close();
+    $update_stmt->close();
 }
 
 // Close the database connection
@@ -61,12 +108,12 @@ $conn->close();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Manage Patients</title>
+    <title>Update Patient Record</title>
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Josefin+Sans:ital,wght@0,100..700;1,100..700&family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2 ?family=Josefin+Sans:ital,wght@0,100..700;1,100..700&family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
 
     <style>
         /* Additional styles for the form layout */
@@ -105,8 +152,8 @@ $conn->close();
                     <span class="toggle"><i class="fa-solid fa-capsules"></i> Medicine</span>
                     <ul class="submenu">
                         <li><a href="medicines.php">Add Medicines</a></li>
-                        <li><a href="#search-filter-medicines">Search & Filter Medicines</a></li>
-                        <li><a href="#expiry-date-tracking">Expiry Date Tracking</a></li>
+                        <li><a href="store_medicine.php">Search & Filter Medicines</a></li>
+                        <li><a href="view_dispensed_medicines.php">View Dispensed Medicines</a></li>
                     </ul>
                 </li>
                 <li><a href="create_account.php"><i class="fa-solid fa-user"></i> Manage Account</a></li>
@@ -116,29 +163,29 @@ $conn->close();
         </aside>
         
         <header class="header">
-        <div class="admin-info">ADMINISTRATOR, Hi <?php echo htmlspecialchars($username); ?></div> <!-- Admin info on the right -->
+            <div class="admin-info">ADMINISTRATOR, Hi <?php echo htmlspecialchars($username); ?></div>
         </header>
         
         <main class="main-content">
-            <h2>Add Patient</h2>
-            <form method="POST" action="patients.php">
+            <h2>Update Patient Record</h2>
+            <form method="POST" action="update_records.php?id=<?php echo $id; ?>">
                 <h3>Basic Patient Information:</h3>
                 
                 <div class="form-group">
                     <div>
                         <label for="full_name">Full Name:</label>
-                        <input type="text" id="full_name" name="full_name" required>
+                        <input type="text" id="full_name" name="full_name" value="<?php echo htmlspecialchars($patient['full_name']); ?>" required>
                     </div>
                     <div>
                         <label for="dob">Date of Birth:</label>
-                        <input type="date" id="dob" name="dob" required>
+                        <input type="date" id="dob" name="dob" value="<?php echo htmlspecialchars($patient['dob']); ?>" required>
                     </div>
                     <div>
                         <label for="gender">Gender:</label>
                         <select id="gender" name="gender" required>
-                            <option value="male">Male</option>
-                            <option value="female">Female</option>
-                            <option value="other">Other</option>
+                            <option value="male" <?php echo $patient['gender'] == 'male' ? 'selected' : ''; ?>>Male</option>
+                            <option value="female" <?php echo $patient['gender'] == 'female' ? 'selected' : ''; ?>>Female</option>
+                            <option value="other" <?php echo $patient['gender'] == 'other' ? 'selected' : ''; ?>>Other</option>
                         </select>
                     </div>
                 </div>
@@ -146,15 +193,15 @@ $conn->close();
                 <div class="form-group">
                     <div>
                         <label for="contact_number">Contact Number:</label>
-                        <input type="tel" id="contact_number" name="contact_number" required>
+                        <input type="tel" id="contact_number" name="contact_number" value="<?php echo htmlspecialchars($patient['contact_number']); ?>" required>
                     </div>
                     <div>
                         <label for="email">Email Address (Optional):</label>
-                        <input type="email" id="email" name="email">
+                        <input type="email" id="email" name="email" value="<?php echo htmlspecialchars($patient['email']); ?>">
                     </div>
                     <div>
                         <label for="address">Home Address:</label>
-                        <textarea id="address" name="address" required></textarea>
+                        <textarea id="address" name="address" required><?php echo htmlspecialchars($patient['address']); ?></textarea>
                     </div>
                 </div>
 
@@ -162,41 +209,41 @@ $conn->close();
                 <div class="form-group">
                     <div>
                         <label for="blood_type">Blood Type:</label>
-                        <input type="text" id="blood_type" name="blood_type" required>
+                        <input type="text" id="blood_type" name="blood_type" value="<?php echo htmlspecialchars($patient['blood_type']); ?>" required>
                     </div>
                     <div>
                         <label for="allergies">Allergies (If any):</label>
-                        <input type="text" id="allergies" name="allergies">
+                        <input type="text" id="allergies" name="allergies" value="<?php echo htmlspecialchars($patient['allergies']); ?>">
                     </div>
                     <div>
                         <label for="conditions">Existing Medical Conditions:</label>
-                        <input type="text" id="conditions" name="conditions">
+                        <input type="text" id="conditions" name="conditions" value="<?php echo htmlspecialchars($patient['conditions']); ?>">
                     </div>
                 </div>
 
                 <div class="form-group">
                     <div>
                         <label for="surgeries">Past Surgeries or Treatments:</label>
-                        <input type="text" id="surgeries" name="surgeries">
+                        <input type="text" id="surgeries" name="surgeries" value="<?php echo htmlspecialchars($patient['surgeries']); ?>">
                     </div>
                     <div>
                         <label for="medications">Current Medications:</label>
-                        <input type="text" id="medications" name="medications">
+                        <input type="text" id="medications" name="medications" value="<?php echo htmlspecialchars($patient['medications']); ?>">
                     </div>
                     <div>
                         <label for="family_history">Family Medical History:</label>
-                        <input type="text" id="family_history" name="family_history">
+                        <input type="text" id="family_history" name="family_history" value="<?php echo htmlspecialchars($patient['family_history']); ?>">
                     </div>
                 </div>
 
                 <div class="form-group">
                     <div>
                         <label for="assigned_doctor">Assigned Doctor:</label>
-                        <input type="text" id="assigned_doctor" name="assigned_doctor">
+                        <input type="text" id="assigned_doctor" name="assigned_doctor" value="<?php echo htmlspecialchars($patient['assigned_doctor']); ?>">
                     </div>
                     <div>
                         <label for="reason_for_visit">Reason for Visit:</label>
-                        <textarea id="reason_for_visit" name="reason_for_visit" required></textarea>
+                        <textarea id="reason_for_visit" name="reason_for_visit" required><?php echo htmlspecialchars($patient['reason_for_visit']); ?></textarea>
                     </div>
                 </div>
 
@@ -204,19 +251,19 @@ $conn->close();
                 <div class="form-group">
                     <div>
                         <label for="emergency_contact_name">Emergency Contact Name:</label>
-                        <input type="text" id="emergency_contact_name" name="emergency_contact_name" required>
+                        <input type="text" id="emergency_contact_name" name="emergency_contact_name" value="<?php echo htmlspecialchars($patient['emergency_contact_name']); ?>" required>
                     </div>
                     <div>
                         <label for="relationship">Relationship:</label>
-                        <input type="text" id="relationship" name="relationship" required>
+                        <input type="text" id="relationship" name="relationship" value="<?php echo htmlspecialchars($patient['relationship']); ?>" required>
                     </div>
                     <div>
                         <label for="emergency_contact_number">Emergency Contact Number:</label>
-                        <input type="tel" id="emergency_contact_number" name="emergency_contact_number" required>
+                        <input type="tel" id="emergency_contact_number" name="emergency_contact_number" value="<?php echo htmlspecialchars($patient['emergency_contact_number']); ?>" required>
                     </div>
                 </div>
 
-                <input type="submit" value="Submit Patient">
+                <input type="submit" value="Update Patient">
             </form>
         </main>
     </div>
