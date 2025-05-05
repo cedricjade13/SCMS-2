@@ -11,18 +11,21 @@ if (isset($_SESSION['username'])) {
     exit();
 }
 
-// Fetch dispensed medicines with patient and medicine info
-$dispenses = [];
-$sql = "SELECT md.id, p.full_name, m.name AS medicine_name, md.quantity, md.dispense_date 
-        FROM medicine_dispenses md 
-        JOIN patients p ON md.patient_id = p.id 
-        JOIN medicines m ON md.medicine_id = m.id 
-        ORDER BY md.dispense_date DESC";
+// Query to find patients with 3 or more medicine dispenses within the same week
+$frequentDispenses = [];
+$sql = "
+    SELECT p.id, p.full_name, YEAR(md.dispense_date) AS visit_year, WEEK(md.dispense_date) AS visit_week, COUNT(*) AS dispense_count
+    FROM medicine_dispenses md
+    JOIN patients p ON md.patient_id = p.id
+    GROUP BY p.id, visit_year, visit_week
+    HAVING dispense_count >= 3
+    ORDER BY visit_year DESC, visit_week DESC, p.full_name
+";
 $result = $conn->query($sql);
 
-if ($result->num_rows > 0) {
+if ($result && $result->num_rows > 0) {
     while ($row = $result->fetch_assoc()) {
-        $dispenses[] = $row;
+        $frequentDispenses[] = $row;
     }
 }
 
@@ -34,7 +37,7 @@ $conn->close();
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Dispensed Medicines</title>
+<title>Frequent Visits - SCMS</title>
 <link rel="stylesheet" href="styles.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" crossorigin="anonymous" />
 <link href="https://fonts.googleapis.com/css2?family=Josefin+Sans:wght@400;600&display=swap" rel="stylesheet" />
@@ -48,6 +51,17 @@ $conn->close();
     .container {
         display: flex;
     }
+    
+    .sidebar h2 {
+        text-align: center;
+        margin-bottom: 20px;
+    }
+    .menu {
+        flex: 1;
+        list-style-type: none;
+        padding-left: 0;
+    }
+
     .sidebar {
             width: 250px;
             background-color: #2c3e50;
@@ -67,17 +81,20 @@ $conn->close();
         }
 
         .menu li .submenu {
-            max-height: 0; /* Set max-height to 0 for transition */
-            opacity: 0; /* Set opacity to 0 for transition */
-            overflow: hidden; /* Hide overflow */
-            transition: max-height 0.5s ease, opacity 0.5s ease; /* Smooth transition for submenu */
-            display: block; /* Keep the submenu in the flow */
-        }
+    max-height: 0; /* Set max-height to 0 for transition */
+    opacity: 0; /* Set opacity to 0 for transition */
+    overflow: hidden; /* Hide overflow */
+    transition: max-height 0.5s ease, opacity 0.5s ease; /* Smooth transition for submenu */
+    display: block; /* Keep the submenu in the flow */
 
-        .menu li .submenu.show {
-            max-height: 175px; /* Set a larger max-height for the submenu */
-            opacity: 1; /* Set opacity to 1 for transition */
-        }
+}
+
+
+
+.menu li .submenu.show {
+    max-height: 175px; /* Set a larger max-height for the submenu */
+    opacity: 1; /* Set opacity to 1 for transition */
+}
 
         .menu li span:hover {
             background-color: #34495e; /* Change background on hover */
@@ -88,30 +105,16 @@ $conn->close();
             background-color: #34495e; /* Change background on hover */
             transition: background-color 0.3s ease; /* Smooth transition for background */
         }
-    .sidebar h2 {
-        text-align: center;
-        margin-bottom: 20px;
-    }
-    .menu {
-        flex: 1;
-        list-style-type: none;
-        padding-left: 0;
-    }
     
-    .menu li span {
+    .menu li span,
+    .menu li a {
         font-weight: bold;
         display: block;
         margin-bottom: 5px;
         cursor: pointer;
         padding: 10px;
-        transition: background 0.3s;
-    }
-    
-    .menu li a {
         color: white;
         text-decoration: none;
-        padding: 10px;
-        display: block;
         border-radius: 5px;
         transition: background 0.3s;
     }
@@ -122,6 +125,8 @@ $conn->close();
         padding: 10px;
         border-radius: 5px;
         margin-top: 15px;
+        display: block;
+        text-align: center;
     }
     .logout:hover {
         background-color: #34495e;
@@ -153,25 +158,20 @@ $conn->close();
         border-radius: 8px;
         box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     }
-    table {
-        width: 100%;
-        border-collapse: collapse;
-        margin-top: 20px;
-    }
-    th, td {
-        border: 1px solid #ddd;
-        padding: 10px;
-        text-align: left;
-        vertical-align: middle;
-    }
-    th {
-        background-color: #3ddbd9;
-        color: white;
-    }
     h2 {
         color: #2980b9;
         margin-bottom: 20px;
     }
+    .message {
+        background-color: #f8d7da;
+        color: #842029;
+        border: 1px solid #f5c2c7;
+        padding: 15px;
+        margin-bottom: 15px;
+        border-radius: 5px;
+    }
+
+    
 </style>
 </head>
 <body>
@@ -185,7 +185,7 @@ $conn->close();
                 <ul class="submenu">
                     <li><a href="patients.php">Add Patient</a></li>
                     <li><a href="view_records.php">View Records</a></li>
-                    <li><a href="frequent_visits.php"></i> Frequent Visits</a></li>
+                    <li><a href="frequent_visits.php">Frequent Visits</a></li>
                 </ul>
             </li>
             <li>
@@ -201,37 +201,21 @@ $conn->close();
         </ul>
         <a href="login.php" class="logout"><i class="fa-solid fa-right-from-bracket"></i> Logout</a>
     </aside>
-
     <header class="header">
         <div class="admin-info">ADMINISTRATOR, Hi <?php echo htmlspecialchars($username); ?></div>
     </header>
-
     <main class="main-content">
-        <h2>Dispensed Medicines</h2>
-        <table>
-            <thead>
-                <tr>
-                    <th>Patient Name</th>
-                    <th>Medicine Name</th>
-                    <th>Quantity</th>
-                    <th>Dispense Date</th>
-                </tr>
-            </thead>
-            <tbody>
-                <?php if(count($dispenses) > 0): ?>
-                    <?php foreach ($dispenses as $dispense): ?>
-                        <tr>
-                            <td><?php echo htmlspecialchars($dispense['full_name']); ?></td>
-                            <td><?php echo htmlspecialchars($dispense['medicine_name']); ?></td>
-                            <td><?php echo htmlspecialchars($dispense['quantity']); ?></td>
-                            <td><?php echo htmlspecialchars($dispense['dispense_date']); ?></td>
-                        </tr>
-                    <?php endforeach; ?>
-                <?php else: ?>
-                    <tr><td colspan="5" style="text-align:center;">No dispensed medicines found.</td></tr>
-                <?php endif; ?>
-            </tbody>
-        </table>
+        <h2>Frequent Visits</h2>
+        <?php if (count($frequentDispenses) > 0): ?>
+            <?php foreach ($frequentDispenses as $patient): ?>
+                <div class="message">
+                    <strong><?php echo htmlspecialchars($patient['full_name']); ?></strong> has visited the clinic multiple times (<?php echo htmlspecialchars($patient['dispense_count']); ?> dispenses) 
+                    in week <?php echo htmlspecialchars($patient['visit_week']); ?>, <?php echo htmlspecialchars($patient['visit_year']); ?> and should be referred to the hospital.
+                </div>
+            <?php endforeach; ?>
+        <?php else: ?>
+            <p>No patients have visited multiple times within a single week.</p>
+        <?php endif; ?>
     </main>
 </div>
 
@@ -239,26 +223,27 @@ $conn->close();
     // JavaScript to toggle submenu visibility
     const toggles = document.querySelectorAll('.toggle');
     toggles.forEach(toggle => {
-            toggle.addEventListener('click', () => {
-                // Close all submenus
-                toggles.forEach(t => {
-                    const submenu = t.nextElementSibling;
-                    if (submenu) {
-                        submenu.classList.remove('show'); // Remove show class to close
-                    }
-                });
-
-                // Open the clicked submenu
-                const submenu = toggle.nextElementSibling;
+        toggle.addEventListener('click', () => {
+            // Close all submenus
+            toggles.forEach(t => {
+                const submenu = t.nextElementSibling;
                 if (submenu) {
-                    submenu.classList.toggle('show'); // Toggle show class to open/close
+                    submenu.classList.remove('show'); // Remove show class to close
                 }
             });
+
+            // Open the clicked submenu
+            const submenu = toggle.nextElementSibling;
+            if (submenu) {
+                submenu.classList.toggle('show'); // Toggle show class to open/close
+            }
         });
+    });
 
     document.querySelector('.toggle.dashboard').addEventListener('click', () => {
         window.location.href = 'dashboard.php';
     });
 </script>
+
 </body>
 </html>

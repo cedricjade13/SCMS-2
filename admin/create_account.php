@@ -138,6 +138,47 @@ $conn->close();
         .create-account:hover {
             background-color: #1a242f; /* Darker shade on hover */
         }
+
+        .sidebar {
+            width: 250px;
+            background-color: #2c3e50;
+            color: white;
+            padding: 20px;
+            position: fixed;
+            height: 100vh; /* Full viewport height */
+            overflow-y: auto; /* Enable vertical scrolling */
+            display: flex;
+            flex-direction: column;
+            transition: all 0.3s ease; /* Smooth transition for sidebar */
+        }
+
+        .menu li {
+            margin: 15px 0;
+            position: relative; /* Position relative for submenu */
+        }
+
+        .menu li .submenu {
+            max-height: 0; /* Set max-height to 0 for transition */
+            opacity: 0; /* Set opacity to 0 for transition */
+            overflow: hidden; /* Hide overflow */
+            transition: max-height 0.5s ease, opacity 0.5s ease; /* Smooth transition for submenu */
+            display: block; /* Keep the submenu in the flow */
+        }
+
+        .menu li .submenu.show {
+            max-height: 175px; /* Set a larger max-height for the submenu */
+            opacity: 1; /* Set opacity to 1 for transition */
+        }
+
+        .menu li span:hover {
+            background-color: #34495e; /* Change background on hover */
+            transition: background-color 0.3s ease; /* Smooth transition for background */
+        }
+
+        .menu li a:hover {
+            background-color: #34495e; /* Change background on hover */
+            transition: background-color 0.3s ease; /* Smooth transition for background */
+        }
     </style>
 </head>
 <body>
@@ -154,6 +195,7 @@ $conn->close();
                     <ul class="submenu">
                         <li><a href="patients.php">Add Patient</a></li>
                         <li><a href="view_records.php">View Records</a></li>
+                        <li><a href="frequent_visits.php"></i> Frequent Visits</a></li>
                     </ul>
                 </li>
                 <li>
@@ -206,8 +248,19 @@ $conn->close();
 
         toggles.forEach(toggle => {
             toggle.addEventListener('click', () => {
+                // Close all submenus
+                toggles.forEach(t => {
+                    const submenu = t.nextElementSibling;
+                    if (submenu) {
+                        submenu.classList.remove('show'); // Remove show class to close
+                    }
+                });
+
+                // Open the clicked submenu
                 const submenu = toggle.nextElementSibling;
-                submenu.style.display = submenu.style.display === 'block' ? 'none' : 'block';
+                if (submenu) {
+                    submenu.classList.toggle('show'); // Toggle show class to open/close
+                }
             });
         });
 

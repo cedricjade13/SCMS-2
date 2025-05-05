@@ -39,6 +39,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Add Medicine</title>
+    <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -71,16 +72,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             display: flex;
         }
 
-        .sidebar {
-            width: 250px;
-            background-color: #2c3e50;
-            color: white;
-            padding: 20px;
-            position: fixed; /* Keep the sidebar fixed */
-            height: 100%; /* Full height */
-            display: flex;
-            flex-direction: column; /* Arrange items in a column */
-        }
+        
 
         .sidebar h2 {
             text-align: center;
@@ -92,9 +84,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             list-style-type: none;
         }
 
-        .menu li {
-            margin: 15px 0;
-        }
+        
 
         .menu li span {
             font-weight: bold;
@@ -105,14 +95,48 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             transition: background 0.3s; /* Smooth background transition */
         }
 
-        .menu li span:hover {
-            background-color: #34495e; /* Hover effect for Patient and Medicine */
+        .sidebar {
+            width: 250px;
+            background-color: #2c3e50;
+            color: white;
+            padding: 20px;
+            position: fixed;
+            height: 100vh; /* Full viewport height */
+            overflow-y: auto; /* Enable vertical scrolling */
+            display: flex;
+            flex-direction: column;
+            transition: all 0.3s ease; /* Smooth transition for sidebar */
+        }
+
+        .menu li {
+            margin: 15px 0;
+            position: relative; /* Position relative for submenu */
         }
 
         .menu li .submenu {
-            display: none; /* Hide submenus by default */
-            padding-left: 15px; /* Indent submenu items */
+            max-height: 0; /* Set max-height to 0 for transition */
+            opacity: 0; /* Set opacity to 0 for transition */
+            overflow: hidden; /* Hide overflow */
+            transition: max-height 0.5s ease, opacity 0.5s ease; /* Smooth transition for submenu */
+            display: block; /* Keep the submenu in the flow */
         }
+
+        .menu li .submenu.show {
+            max-height: 175px; /* Set a larger max-height for the submenu */
+            opacity: 1; /* Set opacity to 1 for transition */
+        }
+
+        .menu li span:hover {
+            background-color: #34495e; /* Change background on hover */
+            transition: background-color 0.3s ease; /* Smooth transition for background */
+        }
+
+        .menu li a:hover {
+            background-color: #34495e; /* Change background on hover */
+            transition: background-color 0.3s ease; /* Smooth transition for background */
+        }
+
+        
 
         .menu li a {
             color: white;
@@ -123,9 +147,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             transition: background 0.3s;
         }
 
-        .menu li a:hover {
-            background-color: #34495e; /* Same hover effect as other links */
-        }
+        
 
         .logout {
             color: white; /* Text color */
@@ -246,6 +268,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     <ul class="submenu">
                         <li><a href="patients.php">Add Patient</a></li>
                         <li><a href="view_records.php">View Records</a></li>
+                        <li><a href="frequent_visits.php"></i> Frequent Visits</a></li>
                     </ul>
                 </li> 
                 <li>
@@ -285,8 +308,19 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
         toggles.forEach(toggle => {
             toggle.addEventListener('click', () => {
+                // Close all submenus
+                toggles.forEach(t => {
+                    const submenu = t.nextElementSibling;
+                    if (submenu) {
+                        submenu.classList.remove('show'); // Remove show class to close
+                    }
+                });
+
+                // Open the clicked submenu
                 const submenu = toggle.nextElementSibling;
-                submenu.style.display = submenu.style.display === 'block' ? 'none' : 'block';
+                if (submenu) {
+                    submenu.classList.toggle('show'); // Toggle show class to open/close
+                }
             });
         });
 

@@ -90,6 +90,7 @@ $conn->close();
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Get Medicine</title>
+<link rel="stylesheet" href="styles.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" crossorigin="anonymous" />
 <link href="https://fonts.googleapis.com/css2?family=Josefin+Sans:wght@400;600&display=swap" rel="stylesheet" />
 <style>
@@ -121,15 +122,45 @@ $conn->close();
     }
 
     .sidebar {
-        width: 250px;
-        background-color: #2c3e50;
-        color: white;
-        padding: 20px;
-        position: fixed;
-        height: 100%;
-        display: flex;
-        flex-direction: column;
-    }
+            width: 250px;
+            background-color: #2c3e50;
+            color: white;
+            padding: 20px;
+            position: fixed;
+            height: 100vh; /* Full viewport height */
+            overflow-y: auto; /* Enable vertical scrolling */
+            display: flex;
+            flex-direction: column;
+            transition: all 0.3s ease; /* Smooth transition for sidebar */
+        }
+
+        .menu li {
+            margin: 15px 0;
+            position: relative; /* Position relative for submenu */
+        }
+
+        .menu li .submenu {
+            max-height: 0; /* Set max-height to 0 for transition */
+            opacity: 0; /* Set opacity to 0 for transition */
+            overflow: hidden; /* Hide overflow */
+            transition: max-height 0.5s ease, opacity 0.5s ease; /* Smooth transition for submenu */
+            display: block; /* Keep the submenu in the flow */
+        }
+
+        .menu li .submenu.show {
+            max-height: 175px; /* Set a larger max-height for the submenu */
+            opacity: 1; /* Set opacity to 1 for transition */
+        }
+
+        .menu li span:hover {
+            background-color: #34495e; /* Change background on hover */
+            transition: background-color 0.3s ease; /* Smooth transition for background */
+        }
+
+        .menu li a:hover {
+            background-color: #34495e; /* Change background on hover */
+            transition: background-color 0.3s ease; /* Smooth transition for background */
+        }
 
     .sidebar h2 {
         text-align: center;
@@ -142,9 +173,7 @@ $conn->close();
         padding-left: 0;
     }
 
-    .menu li {
-        margin: 15px 0;
-    }
+    
 
     .menu li span {
         font-weight: bold;
@@ -155,9 +184,7 @@ $conn->close();
         transition: background 0.3s;
     }
 
-    .menu li span:hover {
-        background-color: #34495e;
-    }
+    
 
     .menu li a {
         color: white;
@@ -168,9 +195,7 @@ $conn->close();
         transition: background 0.3s;
     }
 
-    .menu li a:hover {
-        background-color: #34495e;
-    }
+    
 
     .logout {
         color: white;
@@ -262,6 +287,7 @@ $conn->close();
                 <ul class="submenu">
                     <li><a href="patients.php">Add Patient</a></li>
                     <li><a href="view_records.php">View Records</a></li>
+                    <li><a href="frequent_visits.php"></i> Frequent Visits</a></li>
                 </ul>
             </li>
             <li>
@@ -310,11 +336,22 @@ $conn->close();
     // JavaScript to toggle submenu visibility
     const toggles = document.querySelectorAll('.toggle');
     toggles.forEach(toggle => {
-        toggle.addEventListener('click', () => {
-            const submenu = toggle.nextElementSibling;
-            submenu.style.display = submenu.style.display === 'block' ? 'none' : 'block';
+            toggle.addEventListener('click', () => {
+                // Close all submenus
+                toggles.forEach(t => {
+                    const submenu = t.nextElementSibling;
+                    if (submenu) {
+                        submenu.classList.remove('show'); // Remove show class to close
+                    }
+                });
+
+                // Open the clicked submenu
+                const submenu = toggle.nextElementSibling;
+                if (submenu) {
+                    submenu.classList.toggle('show'); // Toggle show class to open/close
+                }
+            });
         });
-    });
 
     document.querySelector(".toggle.dashboard").addEventListener("click", function() {
         window.location.href = "dashboard.php";

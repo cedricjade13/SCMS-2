@@ -1,53 +1,61 @@
 <?php 
-session_start(); // Start the session
+session_start(); 
+include('../database/config.php'); 
 
-// Include the database configuration file
-include('../database/config.php'); // Make sure this path is correct
+if (isset($_SESSION['username'])) { 
+    $username = $_SESSION['username']; 
+} else { 
+    header("Location: login.php"); 
+    exit(); 
+} 
 
-if (isset($_SESSION['username'])) {
-    $username = $_SESSION['username']; // Get the username from the session
-} else {
-    // Redirect to login page if not logged in
-    header("Location: login.php");
-    exit();
-}
+// Initialize an array to hold patient data 
+$patients = []; 
 
-// Initialize an array to hold patient data
-$patients = [];
+// Fetch total number of patients
+$totalPatientsQuery = "SELECT COUNT(*) as total FROM patients";
+$totalResult = $conn->query($totalPatientsQuery);
+$totalRow = $totalResult->fetch_assoc();
+$totalPatients = $totalRow['total'];
 
-// Fetch patient data from the database
-$sql = "SELECT * FROM patients"; // Adjust the table name if necessary
-$result = $conn->query($sql);
+// Pagination variables
+$limit = 8; // Number of entries per page
+$page = isset($_GET['page']) ? (int)$_GET['page'] : 1; // Current page
+$offset = ($page - 1) * $limit; // Offset for SQL query
 
-if ($result->num_rows > 0) {
-    // Fetch all patient records
-    while ($row = $result->fetch_assoc()) {
-        $patients[] = $row; // Add each patient record to the array
-    }
-}
+// Fetch patient data from the database with limit and offset
+$sql = "SELECT * FROM patients LIMIT $limit OFFSET $offset"; 
+$result = $conn->query($sql); 
 
-// Close the database connection
-$conn->close();
+if ($result->num_rows > 0) { 
+    while ($row = $result->fetch_assoc()) { 
+        $patients[] = $row; 
+    } 
+} 
+
+// Sort patients array by full_name 
+usort($patients, function($a, $b) { 
+    return strcmp($a['full_name'], $b['full_name']); 
+}); 
+
+// Close the database connection 
+$conn->close(); 
 ?>
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>View Patient Records</title>
+    <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Josefin+Sans:wght@400;600&display=swap" rel="stylesheet">
-    
     <style>
         * {
             box-sizing: border-box;
             font-family: "Josefin Sans", sans-serif;
-            font-optical-sizing: auto;
-            font-weight: weight;
-            font-style: normal;
             margin: 0;
             padding: 0;
         }
@@ -61,10 +69,40 @@ $conn->close();
             background-color: #2c3e50;
             color: white;
             padding: 20px;
-            position: fixed; /* Keep the sidebar fixed */
-            height: 100%; /* Full height */
+            position: fixed;
+            height: 100vh; /* Full viewport height */
+            overflow-y: auto; /* Enable vertical scrolling */
             display: flex;
-            flex-direction: column; /* Arrange items in a column */
+            flex-direction: column;
+            transition: all 0.3s ease; /* Smooth transition for sidebar */
+        }
+
+        .menu li {
+            margin: 15px 0;
+            position: relative; /* Position relative for submenu */
+        }
+
+        .menu li .submenu {
+            max-height: 0; /* Set max-height to 0 for transition */
+            opacity: 0; /* Set opacity to 0 for transition */
+            overflow: hidden; /* Hide overflow */
+            transition: max-height 0.5s ease, opacity 0.5s ease; /* Smooth transition for submenu */
+            display: block; /* Keep the submenu in the flow */
+        }
+
+        .menu li .submenu.show {
+            max-height: 175px; /* Set a larger max-height for the submenu */
+            opacity: 1; /* Set opacity to 1 for transition */
+        }
+
+        .menu li span:hover {
+            background-color: #34495e; /* Change background on hover */
+            transition: background-color 0.3s ease; /* Smooth transition for background */
+        }
+
+        .menu li a:hover {
+            background-color: #34495e; /* Change background on hover */
+            transition: background-color 0.3s ease; /* Smooth transition for background */
         }
 
         .sidebar h2 {
@@ -73,31 +111,26 @@ $conn->close();
         }
 
         .menu {
-            flex: 1; /* Allow the menu to grow and take available space */
+            flex: 1;
             list-style-type: none;
         }
 
-        .menu li {
-            margin: 15px 0;
-        }
+        
 
         .menu li span {
             font-weight: bold;
             display: block;
             margin-bottom: 5px;
-            cursor: pointer; /* Change cursor to pointer for better UX */
-            padding: 10px; /* Add padding for better click area */
-            transition: background 0.3s; /* Smooth background transition */
+            cursor: pointer;
+            padding: 10px;
+            transition: background 0.3s;
         }
 
         .menu li span:hover {
-            background-color: #34495e; /* Hover effect for Patient and Medicine */
+            background-color: #34495e;
         }
 
-        .menu li .submenu {
-            display: none; /* Hide submenus by default */
-            padding-left: 15px; /* Indent submenu items */
-        }
+        
 
         .menu li a {
             color: white;
@@ -108,62 +141,60 @@ $conn->close();
             transition: background 0.3s;
         }
 
-        .menu li a:hover {
-            background-color: #34495e; /* Same hover effect as other links */
-        }
+        
 
         .logout {
-            color: white; /* Text color */
-            text-decoration: none; /* Remove underline */
-            padding: 10px; /* Same padding as other links */
-            border-radius: 5px; /* Same border radius */
-            margin-top: 15px; /* Add margin for spacing */
+            color: white;
+            text-decoration: none;
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 15px;
         }
 
         .logout:hover {
-            background-color: #34495e; /* Same hover effect as other links */
+            background-color: #34495e;
         }
 
         .header {
-            background-color: #2980b9; /* Header background color */
-            color: white; /* Text color */
-            padding: 15px; /* Padding for the header */
-            display: flex; /* Use flexbox for layout */
-            justify-content: flex-end; /* Align items to the right */
-            align-items: center; /* Center items vertically */
-            border-bottom : 2px solid #1c598a; /* Add a bottom border for separation */
-            position: fixed; /* Fix the header at the top */
-            top: 0; /* Align to the top */
-            left: 250px; /* Align to the right of the sidebar */
-            right: 0; /* Align to the right */
-            z-index: 1000; /* Ensure it stays above other content */
+            background-color: #2980b9;
+            color: white;
+            padding: 15px;
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            border-bottom: 2px solid #1c598a;
+            position: fixed;
+            top: 0;
+            left: 250px;
+            right: 0;
+            z-index: 1000;
         }
 
         .admin-info {
-            font-size: 16px; /* Font size for admin info */
-            font-weight: bold; /* Make it bold */
+            font-size: 16px;
+            font-weight: bold;
         }
 
         .main-content {
             flex: 1;
             padding: 20px;
-            margin-left: 250px; /* Add margin to prevent overlap with fixed sidebar */
-            margin-top: 70px; /* Add margin to prevent overlap with fixed header */
-            background-color: #ecf0f1; /* Main content background color */
+            margin-left: 250px;
+            margin-top: 70px;
+            background-color: #ecf0f1;
         }
 
         h2, h3 {
-            color: #2980b9; /* Heading color */
-            margin-bottom: 15px; /* Space below headings */
+            color: #2980b9;
+            margin-bottom: 15px;
         }
 
         input[type="text"] {
-            width: 100%; /* Full width */
-            padding: 10px; /* Padding inside input fields */
-            margin-bottom: 15px; /* Space below input fields */
-            border: 1px solid #ccc; /* Border color */
-            border-radius: 4px; /* Rounded corners for input fields */
-            font-size: 14px; /* Font size for input fields */
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 14px;
         }
 
         table {
@@ -185,7 +216,7 @@ $conn->close();
 
         .actions {
             display: flex;
-            gap: 10px; /* Space between action buttons */
+            gap: 10px;
         }
 
         .edit, .delete {
@@ -197,19 +228,62 @@ $conn->close();
         }
 
         .edit {
-            background-color: #28a745; /* Green for edit */
+            background-color: #28a745;
         }
 
         .edit:hover {
-            background-color: #218838; /* Darker green on hover */
+            background-color: #218838;
         }
 
         .delete {
-            background-color: #dc3545; /* Red for delete */
+            background-color: #dc3545;
         }
 
         .delete:hover {
-            background-color: #c82333; /* Darker red on hover */
+            background-color: #c82333;
+        }
+
+        .filter-container {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .filter-container select {
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 14px;
+            background-color: #fff;
+            transition: border-color 0.3s;
+        }
+
+        .filter-container select:focus {
+            border-color: #2980b9;
+            outline: none;
+        }
+
+        .pagination-info {
+            margin-top: 20px;
+        }
+
+        .pagination {
+            margin-top: 10px;
+            text-align: center;
+        }
+
+        .pagination a {
+            margin: 0 5px;
+            padding: 5px 10px;
+            border: 1px solid #2980b9;
+            color: #2980b9;
+            text-decoration: none;
+            border-radius: 5px;
+        }
+
+        .pagination a.active {
+            background-color: #2980b9;
+            color: white;
         }
     </style>
 </head>
@@ -226,6 +300,7 @@ $conn->close();
                     <ul class="submenu">
                         <li><a href="patients.php">Add Patient</a></li>
                         <li><a href="view_records.php">View Records</a></li>
+                        <li><a href="frequent_visits.php"></i> Frequent Visits</a></li>
                     </ul>
                 </li>
                 <li>
@@ -241,40 +316,89 @@ $conn->close();
             </ul>
             <a href="login.php" class="logout"><i class="fa-solid fa-right-from-bracket"></i> Logout</a>
         </aside>
-        
         <header class="header">
-            <div class="admin-info">ADMINISTRATOR, Hi <?php echo htmlspecialchars($username); ?></div> <!-- Admin info on the right -->
+            <div class="admin-info">ADMINISTRATOR, Hi <?php echo htmlspecialchars($username); ?></div>
         </header>
         
         <main class="main-content">
             <div class="header-container">
                 <h2>Patient Records</h2>
                 <div class="search-container">
-                    <input type="text" id="searchInput" placeholder="Search..." onkeyup="filterTable()">
+                    <input type="text" id="searchInput" placeholder="Search..." onkeyup ="filterTable()">
                 </div>
+                <div class="filter-container">
+                    <select id="courseFilter" onchange="filterTable()">
+                        <option value="">Course</option>
+                        <option value="BSIT">BSIT</option>
+                        <option value="BSCRIM">BSCRIM</option>
+                        <option value="BSBA">BSBA</option>
+                        <option value="BSED">BSED</option>
+                        <option value="BEED">BEED</option>
+                        <option value="BSTM">BSTM</option>
+                        <option value="BSHM">BSHM</option>
+                    </select>
+
+                    <select id="yearLevelFilter" onchange="filterTable()">
+                        <option value="">Year Level</option>
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                        <option value="3">3</option>
+                        <option value="4">4</option>
+                    </select>
+
+                    <select id="sectionFilter" onchange="filterTable()">
+                        <option value="">Section</option>
+                        <option value="A">A</option>
+                        <option value="B">B</option>
+                        <option value="C">C</option>
+                        <option value="D">D</option>
+                        <option value="E">E</option>
+                        <option value="F">F</option>
+                        <option value="G">G</option>
+                    </select>
+
+                    <select id="semesterFilter" onchange="filterTable()">
+                        <option value="">Semester</option>
+                        <option value="1st">1st</option>
+                        <option value="2nd">2nd</option>
+                    </select>
+
+                    <select id="academicYearFilter" onchange="filterTable()">
+                        <option value="">Academic Year</option>
+                        <option value="2025-2026">2025-2026</option>
+                        <option value="2026-2027">2026-2027</option>
+                        <option value="2027-2028">2027-2028</option>
+                        <option value="2028-2029">2028-2029</option>
+                        <option value="2029-2030">2029-2030</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="pagination-info">
+                <p>Total Entries: <?php echo $totalPatients; ?></p>
             </div>
 
             <table id="patientTable">
                 <thead>
                     <tr>
-                        <th>Full Name</th>
-                        <th>Gender</th>
-                        <th>Contact Number</th>
-                        <th>Email</th>
-                        <th>Address</th>
-                        <th>Assigned Doctor</th>
-                        <th>Actions</th>
+                        <th>Name</th>
+                        <th>Course</th>
+                        <th>Year Level</th>
+                        <th>Section</th>
+                        <th>Semester</th>
+                        <th>Academic Year</th>
+                        <th>Action</th>
                     </tr>
                 </thead>
                 <tbody>
                     <?php foreach ($patients as $patient): ?>
                         <tr>
                             <td><?php echo htmlspecialchars($patient['full_name']); ?></td>
-                            <td><?php echo htmlspecialchars($patient['gender']); ?></td>
-                            <td><?php echo htmlspecialchars($patient['contact_number']); ?></td>
-                            <td><?php echo htmlspecialchars($patient['email']); ?></td>
-                            <td><?php echo htmlspecialchars($patient['address']); ?></td>
-                            <td><?php echo htmlspecialchars($patient['assigned_doctor']); ?></td>
+                            <td><?php echo htmlspecialchars($patient['course']); ?></td>
+                            <td><?php echo htmlspecialchars($patient['year_level']); ?></td>
+                            <td><?php echo htmlspecialchars($patient['section']); ?></td>
+                            <td><?php echo htmlspecialchars($patient['semester']); ?></td>
+                            <td><?php echo htmlspecialchars($patient['academic_year']); ?></td>
                             <td class="actions">
                                 <a href="update_records.php?id=<?php echo $patient['id']; ?>" class="edit"><i class="fa-solid fa-edit"></i> Edit</a>
                                 <a href="delete_patient.php?id=<?php echo $patient['id']; ?>" class="delete" onclick="return confirm('Are you sure you want to delete this record?');"><i class="fa-solid fa-trash"></i> Delete</a>
@@ -283,21 +407,67 @@ $conn->close();
                     <?php endforeach; ?>
                 </tbody>
             </table>
+
+            <div class="pagination">
+                <?php
+                $totalPages = ceil($totalPatients / $limit);
+                $startPage = max(1, $page - 2);
+                $endPage = min($totalPages, $page + 2);
+                
+                if ($page > 1) {
+                    echo '<a href="?page=1">«</a>';
+                    echo '<a href="?page=' . ($page - 1) . '">‹</a>';
+                }
+
+                for ($i = $startPage; $i <= $endPage; $i++) {
+                    echo '<a href="?page=' . $i . '" class="' . ($i == $page ? 'active' : '') . '">' . $i . '</a>';
+                }
+
+                if ($endPage < $totalPages) {
+                    echo '...';
+                    echo '<a href="?page=' . $totalPages . '">' . $totalPages . '</ a>';
+                }
+
+                if ($page < $totalPages) {
+                    echo '<a href="?page=' . ($page + 1) . '">›</a>';
+                }
+                ?>
+            </div>
         </main>
     </div>
 
     <script>
         function filterTable() {
             const input = document.getElementById('searchInput');
+            const courseFilter = document.getElementById('courseFilter').value;
+            const yearLevelFilter = document.getElementById('yearLevelFilter').value;
+            const sectionFilter = document.getElementById('sectionFilter').value;
+            const semesterFilter = document.getElementById('semesterFilter').value;
+            const academicYearFilter = document.getElementById('academicYearFilter').value;
+
             const filter = input.value.toLowerCase();
             const table = document.getElementById('patientTable');
             const tr = table.getElementsByTagName('tr');
 
             for (let i = 1; i < tr.length; i++) {
-                const td = tr[i].getElementsByTagName('td')[0]; // Only check the Full Name column
-                if (td) {
-                    const txtValue = td.textContent || td.innerText;
-                    tr[i].style.display = txtValue.toLowerCase().indexOf(filter) > -1 ? "" : "none"; // Show or hide the row
+                const tdFullName = tr[i].getElementsByTagName('td')[0];
+                const tdCourse = tr[i].getElementsByTagName('td')[1];
+                const tdYearLevel = tr[i].getElementsByTagName('td')[2];
+                const tdSection = tr[i].getElementsByTagName('td')[3];
+                const tdSemester = tr[i].getElementsByTagName('td')[4];
+                const tdAcademicYear = tr[i].getElementsByTagName('td')[5];
+
+                const fullNameMatch = tdFullName && tdFullName.textContent.toLowerCase().indexOf(filter) > -1;
+                const courseMatch = courseFilter === "" || (tdCourse && tdCourse.textContent === courseFilter);
+                const yearLevelMatch = yearLevelFilter === "" || (tdYearLevel && tdYearLevel.textContent === yearLevelFilter);
+                const sectionMatch = sectionFilter === "" || (tdSection && tdSection.textContent === sectionFilter);
+                const semesterMatch = semesterFilter === "" || (tdSemester && tdSemester.textContent === semesterFilter);
+                const academicYearMatch = academicYearFilter === "" || (tdAcademicYear && tdAcademicYear.textContent === academicYearFilter);
+
+                if (fullNameMatch && courseMatch && yearLevelMatch && sectionMatch && semesterMatch && academicYearMatch) {
+                    tr[i].style.display = ""; // Show the row
+                } else {
+                    tr[i].style.display = "none"; // Hide the row
                 }
             }
         }
@@ -307,8 +477,19 @@ $conn->close();
 
         toggles.forEach(toggle => {
             toggle.addEventListener('click', () => {
+                // Close all submenus
+                toggles.forEach(t => {
+                    const submenu = t.nextElementSibling;
+                    if (submenu) {
+                        submenu.classList.remove('show'); // Remove show class to close
+                    }
+                });
+
+                // Open the clicked submenu
                 const submenu = toggle.nextElementSibling;
-                submenu.style.display = submenu.style.display === 'block' ? 'none' : 'block';
+                if (submenu) {
+                    submenu.classList.toggle('show'); // Toggle show class to open/close
+                }
             });
         });
 
